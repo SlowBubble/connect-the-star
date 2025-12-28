@@ -64,12 +64,16 @@ function drawDots(ctx, centerX, centerY, radius, vertices) {
         ctx.lineWidth = 2;
         ctx.stroke();
         
-        // Draw label
+        // Draw label outside the circle
+        const labelDistance = 25; // Distance from center of dot to label
+        const labelX = centerX + (radius + labelDistance) * Math.cos(angle);
+        const labelY = centerY + (radius + labelDistance) * Math.sin(angle);
+        
         ctx.fillStyle = '#000';
-        ctx.font = '16px Arial';
+        ctx.font = '32px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(i.toString(), x, y);
+        ctx.fillText(i.toString(), labelX, labelY);
         
         dots.push({ x, y, index: i });
     }
