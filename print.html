@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connect The Star - Printable Version</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 0.5in;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .page {
+            width: 100%;
+            height: 100vh;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+            box-sizing: border-box;
+            page-break-after: always;
+        }
+        
+        .page:last-child {
+            page-break-after: avoid;
+        }
+        
+        .star-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border: 1px solid #ccc;
+            padding: 10px;
+            box-sizing: border-box;
+            position: relative;
+        }
+        
+        .star-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .star-canvas {
+            border: none;
+        }
+        
+        .star-instruction {
+            font-size: 12px;
+            text-align: left;
+            white-space: pre-line;
+            max-width: 100%;
+            word-wrap: break-word;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            margin: 0;
+        }
+        
+        @media print {
+            body {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body>
+    <script>
+        // Star pattern combinations
+        const combinations = [
+            [5, 2],
+            [6, 2], [6, 3],
+            [7, 2], [7, 3],
+            [8, 2], [8, 3], [8, 4],
+            [9, 2], [9, 3], [9, 4],
+            [10, 2], [10, 3], [10, 4], [10, 5],
+            [11, 2], [11, 3], [11, 4], [11, 5],
+            [12, 5],
+        ];
+        
+        // Generate the connection sequence
+        function generateConnectionSequence(vertices, jump) {
+            const cycles = [];
+            const globalVisited = new Set();
+            
+            // Find all cycles
+            for (let start = 0; start < vertices; start++) {
+                if (globalVisited.has(start)) continue;
+                
+                // Start a new cycle
+                const cycle = [];
+                const cycleVisited = new Set();
+                let current = start;
+                
+                while (!cycleVisited.has(current)) {
+                    cycleVisited.add(current);
+                    globalVisited.add(current);
+                    cycle.push(current);
+                    current = (current + jump) % vertices;
+                }
+                
+                // Complete the cycle by adding the starting point
+                cycle.push(start);
+                cycles.push(cycle);
+            }
+            
+            return cycles;
+        }
+        
+        // Draw dots around a circle
+        function drawDots(ctx, centerX, centerY, radius, vertices) {
+            const dots = [];
+            
+            for (let i = 0; i < vertices; i++) {
+                const angle = (2 * Math.PI * i) / vertices - Math.PI / 2; // Start from top
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                
+                // Draw dot
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, 2 * Math.PI);
+                ctx.fillStyle = '#333';
+                ctx.fill();
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Draw label outside the circle
+                const labelDistance = 25; // Distance from center of dot to label
+                const labelX = centerX + (radius + labelDistance) * Math.cos(angle);
+                const labelY = centerY + (radius + labelDistance) * Math.sin(angle);
+                
+                ctx.fillStyle = '#000';
+                ctx.font = '18px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(i.toString(), labelX, labelY);
+                
+                dots.push({ x, y, index: i });
+            }
+            
+            return dots;
+        }
+        
+        // Draw connection lines
+        function drawConnections(ctx, dots, sequence) {
+            ctx.strokeStyle = '#ff0000';
+            ctx.lineWidth = 2;
+            
+            for (let i = 0; i < sequence.length - 1; i++) {
+                const from = dots[sequence[i]];
+                const to = dots[sequence[i + 1]];
+                
+                ctx.beginPath();
+                ctx.moveTo(from.x, from.y);
+                ctx.lineTo(to.x, to.y);
+                ctx.stroke();
+                
+                // Draw arrow
+                drawArrow(ctx, from.x, from.y, to.x, to.y);
+            }
+        }
+        
+        // Draw arrow at the end of a line
+        function drawArrow(ctx, fromX, fromY, toX, toY) {
+            const headLength = 10;
+            const angle = Math.atan2(toY - fromY, toX - fromX);
+            
+            ctx.beginPath();
+            ctx.moveTo(toX, toY);
+            ctx.lineTo(
+                toX - headLength * Math.cos(angle - Math.PI / 6),
+                toY - headLength * Math.sin(angle - Math.PI / 6)
+            );
+            ctx.moveTo(toX, toY);
+            ctx.lineTo(
+                toX - headLength * Math.cos(angle + Math.PI / 6),
+                toY - headLength * Math.sin(angle + Math.PI / 6)
+            );
+            ctx.stroke();
+        }
+        
+        // Draw a single star pattern
+        function drawStarPattern(canvas, vertices, jump, showSolution = false) {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = Math.min(canvas.width, canvas.height) * 0.35; // Larger radius for bigger stars
+            
+            // Draw dots
+            const dots = drawDots(ctx, centerX, centerY, radius, vertices);
+            
+            // Generate connection sequence for instruction
+            const cycles = generateConnectionSequence(vertices, jump);
+            
+            // Simplify cycles of order 2 (remove return path)
+            const simplifiedCycles = cycles.map(cycle => {
+                if (cycle.length === 3) { // [start, end, start] - order 2 cycle
+                    return cycle.slice(0, 2); // Keep only [start, end]
+                }
+                return cycle;
+            });
+            
+            // Draw connections if solution is enabled
+            if (showSolution) {
+                cycles.forEach(cycle => {
+                    drawConnections(ctx, dots, cycle);
+                });
+            }
+            
+            return simplifiedCycles.map(cycle => cycle.join(' → ')).join('\n');
+        }
+        
+        // Create all pages
+        function createPages() {
+            const body = document.body;
+            
+            // Check for solution query parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            const showSolution = urlParams.get('solution') === '1';
+            
+            for (let i = 0; i < combinations.length; i += 4) {
+                const page = document.createElement('div');
+                page.className = 'page';
+                
+                // Add up to 4 star patterns per page
+                for (let j = 0; j < 4 && (i + j) < combinations.length; j++) {
+                    const [vertices, jump] = combinations[i + j];
+                    
+                    const container = document.createElement('div');
+                    container.className = 'star-container';
+                    
+                    const title = document.createElement('div');
+                    title.className = 'star-title';
+                    title.textContent = `${vertices} vertices, jump ${jump}`;
+                    
+                    const canvas = document.createElement('canvas');
+                    canvas.className = 'star-canvas';
+                    canvas.width = 400;
+                    canvas.height = 400;
+                    
+                    const instruction = document.createElement('div');
+                    instruction.className = 'star-instruction';
+                    
+                    container.appendChild(title);
+                    container.appendChild(canvas);
+                    container.appendChild(instruction);
+                    page.appendChild(container);
+                    
+                    // Draw the pattern and set instruction
+                    const instructionText = drawStarPattern(canvas, vertices, jump, showSolution);
+                    instruction.textContent = instructionText;
+                }
+                
+                body.appendChild(page);
+            }
+        }
+        
+        // Initialize when page loads
+        window.addEventListener('load', createPages);
+    </script>
+</body>
+</html>
