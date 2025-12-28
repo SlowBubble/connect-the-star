@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connect The Star</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            text-align: center;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            margin: 20px 0;
+        }
+        .controls {
+            margin: 20px 0;
+        }
+        .instruction {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            white-space: pre-line;
+        }
+    </style>
+</head>
+<body>
+    <h1>Connect The Star</h1>
+    
+    <div class="controls">
+        <label>Vertices: <input type="number" id="vertices" min="3" value="5"></label>
+        <label>Jump: <input type="number" id="jump" min="1" value="2"></label>
+        <label>Show Solution: <input type="checkbox" id="solution"></label>
+        <button onclick="updatePattern()">Update</button>
+    </div>
+    
+    <canvas id="canvas" width="600" height="600"></canvas>
+    
+    <div class="instruction" id="instruction"></div>
+    
+    <script src="main.js"></script>
+</body>
+</html>
